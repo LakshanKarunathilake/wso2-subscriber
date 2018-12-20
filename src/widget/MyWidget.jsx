@@ -162,7 +162,6 @@ export class MyWidget extends Widget {
       hasInfo
     } = this.state;
     if (dataSet.length != 0 && !hasInfo) {
-      console.log("theme is ", theme);
       return (
         <VizG
           config={{

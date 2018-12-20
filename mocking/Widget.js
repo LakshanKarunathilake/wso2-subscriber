@@ -4,9 +4,9 @@ import ChannelManager from './ChannelManager';
 export default class Widget extends Component {
   componentWillUpdate(nextProps, nextState) {
     this.state.theme = nextProps.muiTheme.name;
-    const { publisherSimulation } = nextProps;
+    const { publisherSimulation } = nextProps.simulation;
     const { randomPublisherRunningStatus, subscribeCallBack } = this.state;
-    this.state.publishModel = nextProps.publisherSimulation.simulationModel;
+    this.state.publishModel = publisherSimulation.simulationModel;
     if (publisherSimulation.simulationModel === 'Custom values') {
       clearInterval(this.intervalFunction);
       this.state.randomPublisherRunningStatus = false;
@@ -29,14 +29,14 @@ export default class Widget extends Component {
   }
 
   subscribe(callBackFunction) {
-    const { simulationModel } = this.props.publisherSimulation;
+    const { simulationModel } = this.props.simulation.publisherSimulation;
     this.setState({
       subscribeCallBack: callBackFunction,
       randomPublisherRunningStatus: true,
       publishModel: simulationModel,
     });
-    localStorage.clear();
-    localStorage.setItem('eventStack', JSON.stringify({ events: [] }));
+    // localStorage.clear();
+    // localStorage.setItem('eventStack', JSON.stringify({ events: [] }));
     if (simulationModel === 'Dummy publisher') {
       this.publishEventsWithInterval(callBackFunction);
     }
@@ -45,9 +45,9 @@ export default class Widget extends Component {
   }
 
   publishEventsWithInterval(callBackFunction) {
-    console.log('publishing events');
     this.intervalFunction = setInterval(() => {
-      const { publisherSimulation } = this.props;
+      const { simulation } = this.props;
+      const { publisherSimulation } = simulation;
 
       const randomStart = this.randomDate(
         new Date('2018', '01', '01'),
@@ -55,10 +55,11 @@ export default class Widget extends Component {
       );
       const randomEnd = this.randomDate(randomStart, new Date());
 
-      const eventStack = JSON.parse(localStorage.getItem('eventStack'));
-      eventStack.events.push({ from: randomStart, to: randomEnd });
-      localStorage.setItem('eventStack', JSON.stringify(eventStack));
-      publisherSimulation.updateEventStack(eventStack);
+      // const eventStack = JSON.parse(localStorage.getItem('eventStack'));
+      const eventStack = publisherSimulation.eventStack;
+      eventStack.push({ from: randomStart, to: randomEnd });
+      // localStorage.setItem('eventStack', JSON.stringify(eventStack));
+      simulation.updateEventStack(eventStack);
       callBackFunction({ from: randomStart, to: randomEnd });
     }, 5000);
   }

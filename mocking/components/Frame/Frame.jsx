@@ -21,7 +21,8 @@ import SettingsPanel from "../SettingsPanel/SettingsPanel.jsx";
 const style = {
   resizableBox: {
     border: "solid 1px #ddd",
-    background: "#f0f0f0"
+    background: "#f0f0f0",
+    marginTop: "10px"
   },
   cardHeader: {
     // height: "10%",
@@ -97,7 +98,7 @@ class Frame extends Component {
       defaultContainer: undefined,
       glContainer: { width: "100%", height: "100%", on: event => {} },
       publisherSimulation: {
-        eventStack: undefined,
+        eventStack: [],
         simulationModel: "Dummy publisher"
       }
     };
@@ -187,9 +188,9 @@ class Frame extends Component {
         muiTheme: {
           name: this.state.theme
         },
-        publisherSimulation: {
+        simulation: {
           updateEventStack: this.updateEventStack,
-          simulationModel: this.state.publisherSimulation.simulationModel
+          publisherSimulation: publisherSimulation
         }
       });
     });

@@ -6,6 +6,7 @@ import {
   TableRow,
   TableCell,
   TableBody,
+  Typography,
 } from '@material-ui/core';
 
 const styles = {
@@ -21,10 +22,11 @@ const styles = {
   },
 };
 
-const EventStack = ({ eventStack }) => {
+const EventStack = ({ eventStack, updateEventCount }) => {
   let eventTable;
+
   if (eventStack) {
-    eventTable = eventStack.events
+    eventTable = eventStack
       .map((event, index) => {
         const e = JSON.parse(JSON.stringify(event));
         return (
@@ -54,7 +56,11 @@ const EventStack = ({ eventStack }) => {
           <TableCell align="center">End DateTime</TableCell>
         </TableRow>
       </TableHead>
-      <TableBody>{eventTable}</TableBody>
+      <TableBody>
+        {eventTable || (
+          <Typography>Currently no events in the stack</Typography>
+        )}
+      </TableBody>
     </Table>
   );
 };

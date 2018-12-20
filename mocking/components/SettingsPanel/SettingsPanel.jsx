@@ -4,18 +4,10 @@ import {
   ExpansionPanelDetails,
   ExpansionPanelSummary,
   Button,
-  Grid,
   Tabs,
   Tab,
   AppBar,
-  ExpansionPanelActions,
-  IconButton,
   Typography,
-  CssBaseline,
-  ListItem,
-  List,
-  ListItemText,
-  Divider,
   Table,
   TableHead,
   TableBody,
@@ -26,35 +18,23 @@ import {
   RadioGroup,
   Radio
 } from "@material-ui/core";
-import { withStyles, MuiThemeProvider } from "@material-ui/core/styles";
 import EventStack from "../EventStack/EventStack";
-import DatePicker from "react-datepicker";
+// import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-const styles = {
-  root: {
-    // border: '1px solid red',
-    // marginBottom: "10px",
-    padding: "0px"
-  },
-  content: {
-    margin: "0px",
-    padding: "0px"
-  },
-  expanded: {
-    margin: "0px",
-    padding: "0px"
-  }
-};
+import widgetConf from "../../../resources/widgetConf.json";
+import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
+import DatePicker from "react-date-picker";
 
 export class SettingsPanel extends Component {
   constructor(props) {
     super(props);
     this.state = {
       openExpansion: false,
-      tabIndex: 0,
+      tabIndex: false,
       subscriberModel: "Dummy publisher",
-      startDate: "2018-01-01",
-      endDate: "2018-12-31"
+      startDate: "",
+      endDate: "",
+      simulationEventCount: 0
     };
   }
 
@@ -241,8 +221,8 @@ export class SettingsPanel extends Component {
   };
 
   renderSubscriberConfigs = eventStack => {
-    console.log("eventStack", eventStack);
     const { setSimulationModel } = this.props;
+    const { updateEventStack } = this.props;
     return (
       <div>
         <Typography style={{ fontWeight: "bold" }}>Simulation Model</Typography>
@@ -252,32 +232,50 @@ export class SettingsPanel extends Component {
             value={this.state.subscriberModel}
             onChange={event => {
               const value = event.target.value;
+              updateEventStack(new Array());
               this.setState({ subscriberModel: value }, () => {
                 setSimulationModel(value);
               });
             }}
           >
             <FormControlLabel
-              value="Custom values"
-              control={<Radio />}
-              label="Custom values"
-            />
-            <FormControlLabel
               value="Dummy publisher"
               control={<Radio />}
               label="Dummy publisher"
+            />
+            <FormControlLabel
+              value="Custom values"
+              control={<Radio />}
+              label="Custom values"
             />
           </RadioGroup>
         </FormControl>
         {this.state.subscriberModel === "Custom values" &&
           this.renderCustomPublisher(eventStack)}
-        <Typography style={{ fontWeight: "bold" }}>Event Stack</Typography>
-        <EventStack eventStack={eventStack} />
+        <ExpansionPanel>
+          <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                width: "100%"
+              }}
+            >
+              <Typography style={{ fontWeight: "bold" }}>
+                Event Stack
+              </Typography>
+              <Typography>{eventStack ? eventStack.length : 0}</Typography>
+            </div>
+          </ExpansionPanelSummary>
+          <ExpansionPanelDetails>
+            <EventStack eventStack={eventStack} />
+          </ExpansionPanelDetails>
+        </ExpansionPanel>
       </div>
     );
   };
 
-  renderCustomPublisher = () => {
+  renderCustomPublisher = eventStack => {
     const { startDate, endDate } = this.state;
     return (
       <div>
@@ -291,35 +289,31 @@ export class SettingsPanel extends Component {
           }}
         >
           <span>
-            <DatePicker
-              selected={startDate}
-              onChange={date => {
-                this.setState({ startDate: date });
-              }}
-              showTimeSelect
-              timeFormat="HH:mm"
-              timeIntervals={15}
-              dateFormat="MMMM d, yyyy h:mm aa"
-              timeCaption="time"
-            />
-            <DatePicker
-              selected={endDate}
-              onChange={date => {
-                this.setState({ endDate: date });
-              }}
-              showTimeSelect
-              timeFormat="HH:mm"
-              timeIntervals={15}
-              dateFormat="MMMM d, yyyy h:mm aa"
-              timeCaption="time"
-            />
+            <span>
+              <span>From : </span>
+              <DatePicker
+                onChange={date => {
+                  this.setState({ startDate: date });
+                }}
+                value={startDate}
+              />
+            </span>
+            <span>
+              <span>To : </span>
+              <DatePicker
+                onChange={date => {
+                  this.setState({ endDate: date });
+                }}
+                value={endDate}
+              />
+            </span>
           </span>
 
           <Button
             size={"small"}
             color={"primary"}
             style={{ float: "right" }}
-            onClick={this.handleCustomDateEventPublish}
+            onClick={() => this.handleCustomDateEventPublish(eventStack)}
           >
             Publish
           </Button>
@@ -328,7 +322,7 @@ export class SettingsPanel extends Component {
     );
   };
 
-  handleCustomDateEventPublish = () => {
+  handleCustomDateEventPublish = eventStack => {
     const { startDate, endDate } = this.state;
     const { updateEventStack } = this.props;
     const dateRange = {
@@ -336,31 +330,25 @@ export class SettingsPanel extends Component {
       to: endDate
     };
     global.callBackFunction(dateRange);
-    const eventStack = JSON.parse(localStorage.getItem("eventStack"));
-    eventStack.events.push(dateRange);
-    console.log("events", eventStack.events);
+    console.log("event stack custom", eventStack);
+    if (!eventStack) {
+      eventStack = [];
+    }
+    eventStack.push(dateRange);
     updateEventStack(eventStack);
-    localStorage.setItem("eventStack", JSON.stringify(eventStack));
   };
 
   render() {
-    const { classes, publisherSimulation } = this.props;
+    const { publisherSimulation } = this.props;
     const { tabIndex, openExpansion } = this.state;
-    console.log("states of settings panel", this.state);
+    const pubSubTypes = widgetConf.configs.pubsub.types;
     return (
       <div>
         <ExpansionPanel
           style={{ marginBottom: "5px" }}
           expanded={this.state.openExpansion}
         >
-          <ExpansionPanelSummary
-            classes={{
-              root: classes.root,
-              content: classes.content,
-              expanded: classes.expanded
-            }}
-            style={{ padding: "0px", margin: "0px" }}
-          >
+          <ExpansionPanelSummary style={{ padding: "0px", margin: "0px" }}>
             <AppBar
               position="static"
               style={{
@@ -376,6 +364,7 @@ export class SettingsPanel extends Component {
                 }}
                 value={tabIndex}
                 onChange={(value, event) => {
+                  console.log("value in tab", value.target.value);
                   if (tabIndex === event && openExpansion) {
                     this.setState({
                       openExpansion: false
@@ -387,10 +376,17 @@ export class SettingsPanel extends Component {
                 fullWidth
               >
                 <Tab label="Theme" style={{ color: "#fe5200" }} />
-                <Tab label="Publisher" style={{ color: "#fe5200" }} />
+
+                <Tab
+                  label="Publisher"
+                  hidden={!pubSubTypes.includes("publisher")}
+                  style={{ color: "#fe5200" }}
+                />
+
                 <Tab
                   label="Publisher Simulations"
                   style={{ color: "#fe5200" }}
+                  hidden={!pubSubTypes.includes("subscriber")}
                 />
               </Tabs>
             </AppBar>
@@ -403,6 +399,7 @@ export class SettingsPanel extends Component {
             }}
           >
             {tabIndex === 0 && this.renderThemeConfigs()}
+
             {tabIndex === 1 && this.renderPublisherConfigs()}
             {tabIndex === 2 &&
               this.renderSubscriberConfigs(publisherSimulation.eventStack)}
@@ -413,4 +410,4 @@ export class SettingsPanel extends Component {
   }
 }
 
-export default withStyles(styles)(SettingsPanel);
+export default SettingsPanel;
